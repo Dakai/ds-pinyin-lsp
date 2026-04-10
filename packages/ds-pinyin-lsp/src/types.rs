@@ -37,6 +37,8 @@ pub struct Setting {
     pub match_as_same_as_input: bool,
     /// 是否自动补全长句
     pub match_long_input: bool,
+    /// 双拼方案
+    pub shuangpin_scheme: String,
     /// dict.db3 路径
     pub db_path: String,
     /// 最多显示多少补全结果
@@ -54,6 +56,7 @@ impl Setting {
             show_symbols_by_n_times: 0,
             match_as_same_as_input: false,
             match_long_input: true,
+            shuangpin_scheme: String::from("off"),
             db_path: String::new(),
             max_suggest: 50,
         }

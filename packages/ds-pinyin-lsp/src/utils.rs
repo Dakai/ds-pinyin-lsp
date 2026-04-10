@@ -95,6 +95,8 @@ pub fn query_long_sentence(
 pub fn long_suggests_to_completion_item(
     suggests: Vec<Suggest>,
     range: Range,
+    original_pinyin: &str,
+    is_shuangpin: bool,
 ) -> Vec<CompletionItem> {
     let hanzi = suggests
         .iter()
@@ -111,7 +113,11 @@ pub fn long_suggests_to_completion_item(
     let sentence = vec![CompletionItem {
         label: hanzi.to_string(),
         kind: Some(CompletionItemKind::TEXT),
-        filter_text: Some(pinyin.clone()),
+        filter_text: Some(if is_shuangpin {
+            original_pinyin.to_string()
+        } else {
+            pinyin.clone()
+        }),
         // use text_edit here to avoid client's replace mode
         // it's no need to replace words behind cursor
         text_edit: Some(CompletionTextEdit::Edit(TextEdit::new(range, hanzi))),
@@ -126,7 +132,11 @@ pub fn long_suggests_to_completion_item(
                 .map(|s| CompletionItem {
                     label: s.hanzi.to_string(),
                     kind: Some(CompletionItemKind::TEXT),
-                    filter_text: Some(pinyin.clone()),
+                    filter_text: Some(if is_shuangpin {
+                        original_pinyin.to_string()
+                    } else {
+                        pinyin.clone()
+                    }),
                     // use text_edit here to avoid client's replace mode
                     // it's no need to replace words behind cursor
                     text_edit: Some(CompletionTextEdit::Edit(TextEdit::new(
@@ -143,13 +153,22 @@ pub fn long_suggests_to_completion_item(
     sentence
 }
 
-pub fn suggests_to_completion_item(suggests: Vec<Suggest>, range: Range) -> Vec<CompletionItem> {
+pub fn suggests_to_completion_item(
+    suggests: Vec<Suggest>,
+    range: Range,
+    original_pinyin: &str,
+    is_shuangpin: bool,
+) -> Vec<CompletionItem> {
     suggests
         .into_iter()
         .map(|s| CompletionItem {
             label: s.hanzi.to_string(),
             kind: Some(CompletionItemKind::TEXT),
-            filter_text: Some(s.pinyin),
+            filter_text: Some(if is_shuangpin {
+                original_pinyin.to_string()
+            } else {
+                s.pinyin
+            }),
             // use text_edit here to avoid client's replace mode
             // it's no need to replace words behind cursor
             text_edit: Some(CompletionTextEdit::Edit(TextEdit::new(

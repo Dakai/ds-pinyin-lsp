@@ -12,7 +12,7 @@
 **注意**
 
 - 非专业输入法，不是输入法的代替品，只适合少量需要输入中文的场景。
-- 只支持**全拼**， 需要配合 LSP 客户端使用，比如 coc.nvim (neo)vim / VS Code / lsp-bridge (Emacs) 等。
+- 支持**全拼**和**双拼**， 需要配合 LSP 客户端使用，比如 coc.nvim (neo)vim / VS Code / lsp-bridge (Emacs) 等。
 
 ## Emacs 用户可以配合 [lsp-bridge](https://github.com/manateelazycat/lsp-bridge) 使用
 
@@ -44,6 +44,7 @@
 - `ds-pinyin-lsp.show_symbols_by_n_times`: 是否在输入 `n` 次符号后才显示中文符号补全选项，`0` 表示不开启先选
 - `ds-pinyin-lsp.match_as_same_as_input`: 是否只显示完全匹配结果，比如: 输入 `pinyin` 会只显示 `拼音` 选项，不会显示 `拼音输入法` 等选项
 - `ds-pinyin-lsp.match_long_input`: 是否显示长句匹配，比如：输入 `nihaonishishei` 在没有补全项的时候会把 `你好` `你是谁` 两个选项拼起来作为补全选项
+- `ds-pinyin-lsp.shuangpin_scheme`: 双拼方案，目前支持 `off` (关闭) 和 `flypy` (小鹤双拼)
 - `ds-pinyin-lsp.max_suggest`: 中文补全列表最大显示个数
 
 插件命令：
@@ -54,7 +55,28 @@
 
 ##### 2. 使用 neovim 内置的 lsp
 
-请先安装 [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) 插件，具体配置可参考其[文档对应部分](https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#ds_pinyin_lsp)的配置。
+如果你使用的是 [LazyVim](https://www.lazyvim.org/)，可以添加如下配置到 `lua/plugins/lsp.lua`:
+
+```lua
+return {
+  {
+    "neovim/nvim-lspconfig",
+    opts = {
+      servers = {
+        ds_pinyin_lsp = {
+          init_options = {
+            db_path = "your_path_to_database",
+            completion_on = true,
+            shuangpin_scheme = "flypy", -- 如果使用双拼
+          },
+        },
+      },
+    },
+  },
+}
+```
+
+否则，请先安装 [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) 插件，具体配置可参考其[文档对应部分](https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#ds_pinyin_lsp)的配置。
 
 如果需要配置选项，可参考如下的代码片段：
 
@@ -64,6 +86,7 @@ require('lspconfig').ds_pinyin_lsp.setup {
         db_path = "your_path_to_database",
         completion_on = true,
         match_as_same_as_input = true,
+        shuangpin_scheme = "flypy", -- 如果使用双拼，目前支持 "off" 和 "flypy"
     }
 }
 ```
@@ -83,8 +106,9 @@ require('lspconfig').ds_pinyin_lsp.setup {
       "initializationOptions": {
         "db_path": "path to dict.db3",                             // dict.db3 字典文件
         "completion_on": true,                                     // 是否开启自动补全
-        "completion_around_mode":                                  // 是否启用环绕（光标在汉字（包括中文标点符号）开头/中间/结尾）补全模式
-        "completion_trigger_characters":                           // 触发补全字符，配合 completion_around_mode 使用，在启用环绕模式后，可以通过输入触发补全字符启用自动补全
+        "shuangpin_scheme": "off",                                 // 双拼方案: off, flypy
+        "completion_around_mode": false,                           // 是否启用环绕（光标在汉字（包括中文标点符号）开头/中间/结尾）补全模式
+        "completion_trigger_characters": "",                       // 触发补全字符，配合 completion_around_mode 使用，在启用环绕模式后，可以通过输入触发补全字符启用自动补全
         "show_symbols": true,                                      // 是否补全中文标点符号
         "show_symbols_only_follow_by_hanzi": false,                // 是否只在中文后面补全中文符号
         "show_symbols_by_n_times": 0,                              // 是否在输入 `n` 次符号后才显示中文符号补全选项，`0` 表示不开启先选

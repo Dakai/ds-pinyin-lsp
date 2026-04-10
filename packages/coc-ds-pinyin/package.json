@@ -101,6 +101,15 @@
           "default": 50,
           "description": "Max number of autocompletion items"
         },
+        "ds-pinyin-lsp.shuangpin_scheme": {
+          "type": "string",
+          "default": "off",
+          "enum": [
+            "off",
+            "flypy"
+          ],
+          "description": "Shuangpin (Double Pinyin) scheme"
+        },
         "ds-pinyin-lsp.server_path": {
           "type": "string",
           "default": "",

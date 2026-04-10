@@ -162,6 +162,13 @@ impl LanguageServer for Backend {
             return Ok(Some(CompletionResponse::Array(vec![])));
         }
 
+        let mut query_pinyin = pinyin.clone();
+        let is_shuangpin = setting.shuangpin_scheme != "off";
+        if is_shuangpin {
+            query_pinyin =
+                crate::shuangpin::shuangpin_to_quanpin(&pinyin, &setting.shuangpin_scheme);
+        }
+
         // 触发模式
         let trigger_completion = !setting.completion_trigger_characters.is_empty()
             && Regex::new(&format!(
@@ -210,14 +217,14 @@ impl LanguageServer for Backend {
             // dict search match
             if let Ok(suggests) = query_dict(
                 conn,
-                &pinyin,
+                &query_pinyin,
                 setting.max_suggest,
                 setting.match_as_same_as_input,
             ) {
                 if suggests.len() > 0 {
                     return Ok(Some(CompletionResponse::List(CompletionList {
                         is_incomplete: true,
-                        items: suggests_to_completion_item(suggests, range),
+                        items: suggests_to_completion_item(suggests, range, &pinyin, is_shuangpin),
                     })));
                 }
             }
@@ -225,12 +232,17 @@ impl LanguageServer for Backend {
             // long sentence
             if setting.match_long_input {
                 if let Ok(Some(suggests)) =
-                    query_long_sentence(conn, &pinyin, setting.match_as_same_as_input)
+                    query_long_sentence(conn, &query_pinyin, setting.match_as_same_as_input)
                 {
                     if suggests.len() > 0 {
                         return Ok(Some(CompletionResponse::List(CompletionList {
                             is_incomplete: true,
-                            items: long_suggests_to_completion_item(suggests, range),
+                            items: long_suggests_to_completion_item(
+                                suggests,
+                                range,
+                                &pinyin,
+                                is_shuangpin,
+                            ),
                         })));
                     }
                 }
@@ -284,6 +296,7 @@ impl Backend {
             "match_as_same_as_input",
             "match_long_input",
             "max_suggest",
+            "shuangpin_scheme",
         ] {
             if let Some(option) = params.get(option_key) {
                 match option_key {
@@ -331,6 +344,12 @@ impl Backend {
                     }
                     "max_suggest" => {
                         (*setting).max_suggest = option.as_u64().unwrap_or(setting.max_suggest);
+                    }
+                    "shuangpin_scheme" => {
+                        (*setting).shuangpin_scheme = option
+                            .as_str()
+                            .unwrap_or(&setting.shuangpin_scheme)
+                            .to_string();
                     }
                     _ => {}
                 }
